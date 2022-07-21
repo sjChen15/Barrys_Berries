@@ -1,4 +1,4 @@
-import random
+import random, numpy
 from typing import List, Dict
 
 """
@@ -54,20 +54,24 @@ def choose_move(data: dict) -> str:
 
     # TODO: Step 1 - Don't hit walls.
     # Use information from `data` and `my_head` to not move beyond the game board.
-    # board = data['board']
-    # board_height = ?
-    # board_width = ?
+    board = data['board']
+    board_height = board["height"]
+    board_width = board["width"]
 
-    # TODO: Step 2 - Don't hit yourself.
-    # Use information from `my_body` to avoid moves that would collide with yourself.
+    for move in possible_moves:
+      next_head = move_pos(move,my_head)
 
-    # TODO: Step 3 - Don't collide with others.
-    # Use information from `data` to prevent your Battlesnake from colliding with others.
+      #avoid walls
+      if(out_of_bounds(board,next_head)):
+        possible_moves.remove[move]
 
-    # TODO: Step 4 - Find food.
-    # Use information in `data` to seek out and find food.
-    # food = data['board']['food']
+      #avoid self and all others
+        if(collide_snake(data["snakes"],next_head)):
+          possible_moves.remove[move]
 
+    
+    food = data['board']['food']
+    closest_food = find_closest_food(food,my_head)
     # Choose a random direction from the remaining possible_moves to move in, and then return that move
     move = random.choice(possible_moves)
     # TODO: Explore new strategies for picking a move that are better than random
@@ -99,3 +103,48 @@ def _avoid_my_neck(my_body: dict, possible_moves: List[str]) -> List[str]:
         possible_moves.remove("up")
 
     return possible_moves
+
+#returns a head that has moved in the direction specified by move
+def move_pos(move: string, head: dict) -> dict:
+  new_head = head
+  if move == "up":
+    new_head["y"] ++
+  if move =="down":
+    new_head["y"] --
+  if move == "left":
+    new_head["x"] --
+  if move == "right":
+    new_head["x"] ++
+  return new_head
+
+#returns true if the head coords are out of bounds
+def out_of_bounds(board: dict, head: dict) ->boolean:
+  if(head["x"]>=board["width"] || head["x"] <0):
+    return True
+  if(head["y"]>=board["height"] || head["y"] <0):
+    return True
+  return False
+
+#returns true if the head coords will hit another snake, including ourselves
+def collide_snake(snakes: dict, head:dict) -> boolean:
+  for s in snakes:
+    body = s["body"] #list of coords
+    if head in body:
+      return True
+  return False
+
+def find_closest_food(food:List[dict],head:dict)->dict:
+  #there is probably a better way to do this
+  dist=200
+  closest={}
+  x=head["x"]
+  y=head["y"]
+  for f in food:
+    n_dist = (f["x"]-x)**2 + (f["y"]-y)**2
+    if( n_dist < dist ):
+      dist = n_dist
+      closest = f
+
+
+  return closest
+  
