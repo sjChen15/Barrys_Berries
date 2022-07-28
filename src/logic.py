@@ -1,141 +1,131 @@
 import random, numpy
 from typing import List, Dict
 
-"""
-This file can be a nice home for your Battlesnake's logic and helper functions.
-
-We have started this for you, and included some logic to remove your Battlesnake's 'neck'
-from the list of possible moves!
-"""
-
 def get_info() -> dict:
-    """
-    This controls your Battlesnake appearance and author permissions.
-    For customization options, see https://docs.battlesnake.com/references/personalization
-
-    TIP: If you open your Battlesnake URL in browser you should see this data.
-    """
     return {
         "apiversion": "1",
-        "author": "",  # TODO: Your Battlesnake Username
-        "color": "#888888",  # TODO: Personalize
-        "head": "default",  # TODO: Personalize
-        "tail": "default",  # TODO: Personalize
+        "author": "sjc",  # TODO: Your Battlesnake Username
+        "color": "#A671B6",  # TODO: Personalize
+        "head": "tongue",  # TODO: Personalize
+        "tail": "freckled",  # TODO: Personalize
     }
 
 
 def choose_move(data: dict) -> str:
-    """
-    data: Dictionary of all Game Board data as received from the Battlesnake Engine.
-    For a full example of 'data', see https://docs.battlesnake.com/references/api/sample-move-request
+    my_snake = data["you"]      
+    my_head = my_snake["head"] #tuple with coordinates  
+    my_body = my_snake["body"]  
 
-    return: A String, the single move to make. One of "up", "down", "left" or "right".
-
-    Use the information in 'data' to decide your next move. The 'data' variable can be interacted
-    with as a Python Dictionary, and contains all of the information about the Battlesnake board
-    for each move of the game.
-
-    """
-    my_snake = data["you"]      # A dictionary describing your snake's position on the board
-    my_head = my_snake["head"]  # A dictionary of coordinates like {"x": 0, "y": 0}
-    my_body = my_snake["body"]  # A list of coordinate dictionaries like [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 2, "y": 0}]
-
-    # Uncomment the lines below to see what this data looks like in your output!
-    # print(f"~~~ Turn: {data['turn']}  Game Mode: {data['game']['ruleset']['name']} ~~~")
-    # print(f"All board data this turn: {data}")
-    # print(f"My Battlesnake this turn is: {my_snake}")
-    # print(f"My Battlesnakes head this turn is: {my_head}")
-    # print(f"My Battlesnakes body this turn is: {my_body}")
-
-    possible_moves = ["up", "down", "left", "right"]
-
-    # Step 0: Don't allow your Battlesnake to move back on it's own neck.
-    possible_moves = _avoid_my_neck(my_body, possible_moves)
-
-    # TODO: Step 1 - Don't hit walls.
-    # Use information from `data` and `my_head` to not move beyond the game board.
     board = data['board']
     board_height = board["height"]
     board_width = board["width"]
 
+    possible_moves = ["up", "down", "left", "right"] 
+    
+    print(f"Current head: {my_head}")
+  
+    legal_moves=[] #hold all valid moves 
     for move in possible_moves:
       next_head = move_pos(move,my_head)
-
+      #print("Move "+move)
+      #print(next_head)
+      
       #avoid walls
       if(out_of_bounds(board,next_head)):
-        possible_moves.remove[move]
-
+        print("Removed "+move+" to avoid walls.")
+        continue
+  
       #avoid self and all others
-        if(collide_snake(data["snakes"],next_head)):
-          possible_moves.remove[move]
+      if(collide_snake(board["snakes"],next_head)):
+        print("Removed "+move+" to avoid snakes.")
+        continue
+        
+      legal_moves.append(move)
 
-    
+    print(f"Legal moves: {legal_moves}")
+    #close snakes
+    snake_count = close_snakes(board["snakes"],legal_moves,my_snake["length"],my_head) 
+
+    #closest food
     food = data['board']['food']
-    closest_food = find_closest_food(food,my_head)
-    # Choose a random direction from the remaining possible_moves to move in, and then return that move
-    move = random.choice(possible_moves)
-    # TODO: Explore new strategies for picking a move that are better than random
-
-    print(f"{data['game']['id']} MOVE {data['turn']}: {move} picked from all valid options in {possible_moves}")
-
+    food_moves = moves_to_food(food,legal_moves,my_head)
+    
+    move = best_move(legal_moves,snake_count,food_moves)
+    print(f"MOVE {data['turn']}: {move} picked from all valid options in {legal_moves}")
+    print()
+  
     return move
 
-
-def _avoid_my_neck(my_body: dict, possible_moves: List[str]) -> List[str]:
-    """
-    my_body: List of dictionaries of x/y coordinates for every segment of a Battlesnake.
-            e.g. [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 2, "y": 0}]
-    possible_moves: List of strings. Moves to pick from.
-            e.g. ["up", "down", "left", "right"]
-
-    return: The list of remaining possible_moves, with the 'neck' direction removed
-    """
-    my_head = my_body[0]  # The first body coordinate is always the head
-    my_neck = my_body[1]  # The segment of body right after the head is the 'neck'
-
-    if my_neck["x"] < my_head["x"]:  # my neck is left of my head
-        possible_moves.remove("left")
-    elif my_neck["x"] > my_head["x"]:  # my neck is right of my head
-        possible_moves.remove("right")
-    elif my_neck["y"] < my_head["y"]:  # my neck is below my head
-        possible_moves.remove("down")
-    elif my_neck["y"] > my_head["y"]:  # my neck is above my head
-        possible_moves.remove("up")
-
-    return possible_moves
-
 #returns a head that has moved in the direction specified by move
-def move_pos(move: string, head: dict) -> dict:
-  new_head = head
+def move_pos(move: str, head: dict) -> dict:
   if move == "up":
-    new_head["y"] ++
+    m = {"x":head["x"],"y":head["y"] + 1}
   if move =="down":
-    new_head["y"] --
+    m = {"x":head["x"],"y":head["y"] - 1}
   if move == "left":
-    new_head["x"] --
+    m = {"x":head["x"] - 1,"y":head["y"]}
   if move == "right":
-    new_head["x"] ++
-  return new_head
+    m = {"x":head["x"] + 1,"y":head["y"]}
+  return m
+  
 
 #returns true if the head coords are out of bounds
-def out_of_bounds(board: dict, head: dict) ->boolean:
-  if(head["x"]>=board["width"] || head["x"] <0):
+def out_of_bounds(board: dict, head: dict) ->bool:
+
+  if(head["x"]>=board["height"] or head["x"] <0):
     return True
-  if(head["y"]>=board["height"] || head["y"] <0):
+  if(head["y"]>=board["width"] or head["y"] <0):
     return True
   return False
 
 #returns true if the head coords will hit another snake, including ourselves
-def collide_snake(snakes: dict, head:dict) -> boolean:
+def collide_snake(snakes: dict, head:dict) -> bool:
   for s in snakes:
     body = s["body"] #list of coords
     if head in body:
       return True
   return False
 
-def find_closest_food(food:List[dict],head:dict)->dict:
+#return moves in order of which has the least snakes
+def close_snakes(snakes: dict, moves:List[dict], size: int, head:dict) -> dict:
+  x=head["x"]
+  y=head["y"]
+
+  body_count = {
+    "up":0,
+    "down":0,
+    "right":0,
+    "left":0
+  }
+  l=3 #dimentions of square to check for snakes
+  
+  #add body 'points' to areas - lower index body part = more dangerous
+  for s in snakes:
+    body = s["body"]
+    s_len = s["length"]
+    for i in range (s_len):
+      s_x= body[i]["x"]
+      s_y= body[i]["y"]
+      
+      if ("up" in moves) and (s_y>y and s_y<=y+l and s_x>=x-l//2 and s_x<=x+l//2):
+        body_count["up"]+=s_len-i
+      if ("down" in moves) and (s_y<y and s_y>=y-l and s_x>=x-l//2 and s_x<=x+l//2):
+        body_count["down"]+=s_len-i
+      if ("right" in moves) and (s_y>=y-l//2 and s_y<=y+l//2 and s_x>x and s_x<=x+l):
+        body_count["right"]+=s_len-i
+      if ("left" in moves) and (s_y>=y-l//2 and s_y<=y+l//2 and s_x<x and s_x>=x-l):
+        body_count["left"]+=s_len-i
+
+  snake_count = dict(sorted(body_count.items(), key=lambda item: item[1]))
+  print(f"Snake count: {snake_count}")
+  return snake_count
+
+#returns moves that move closest to food
+def moves_to_food(food:List[dict],moves:List[dict],head:dict)->List[str]:
+  if(len(food) == 0):
+    return []
   #there is probably a better way to do this
-  dist=200
+  dist=10000
   closest={}
   x=head["x"]
   y=head["y"]
@@ -145,6 +135,38 @@ def find_closest_food(food:List[dict],head:dict)->dict:
       dist = n_dist
       closest = f
 
+  ideal_moves=[]
+  if closest["x"]>x:
+    ideal_moves.append("right")
+  if closest["x"]<x:
+    ideal_moves.append("left")
+  if closest["y"]>y:
+    ideal_moves.append("up")
+  if closest["y"]<y:
+    ideal_moves.append("down")
 
-  return closest
+  print(f"Move to closest food {closest}: {ideal_moves}")
+  return (ideal_moves)
+
+#takes all moves found and determines best one
+def best_move(moves:List[str],snakes:dict,food:List[str])->str:
+  #go through snakes and add smallest value of snakes but move present in moves
+  best=[]
+  for s_m in snakes:
+    if s_m in moves:
+      if len(best) == 0:
+        best.append(s_m)
+        continue
+      if snakes[best[0]] == snakes[s_m]:
+        best.append(s_m)
+
+  #now we have a list of all smallest values
+  print(f"Lowest snakes: {best}")
+  best_move = best[0] #default
+  #avoid getting trapped when facing wall and have two options
   
+  #if for 1+ check if one is in food, return that one
+  for m in best:
+    if m in food:
+      best_move= m
+  return best_move
