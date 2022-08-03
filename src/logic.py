@@ -1,7 +1,5 @@
 from curses.panel import top_panel
-from re import L, U
-from turtle import left, right
-from typing import List, Dict
+from typing import List
 
 def get_info() -> dict:
     return {
