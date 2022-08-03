@@ -25,8 +25,12 @@ def choose_move(data: dict) -> str:
     board_width = board["width"]
 
     grid = [[0 for x in range(board_width)] for y in range(board_height)]
-    fill_snakes(grid,board["snakes"])
+    snake_heads = [] #list of heads of snakes
+    fill_snakes(grid,snake_heads,board["snakes"])
     #print_grid(grid)
+    snake_heads.remove(my_snake["head"])
+    print(f"Heads of snakes: {snake_heads}")
+  
     possible_moves = ["up", "down", "left", "right"] 
     
     print(f"Current head: {my_head}")
@@ -49,11 +53,13 @@ def choose_move(data: dict) -> str:
     #best moves by bsf
     serach_moves = dfs_moves(legal_moves,grid,my_head)
     print(f"dfs_moves: {serach_moves}")
-  
+
+    #find potential head to head hits
+    head_moves = head_to_head(legal_moves,snake_heads)
     #closest food
     food_moves = moves_to_food(food,legal_moves,my_head)
   
-    move = best_move(legal_moves,serach_moves,food_moves,my_snake["length"])
+    move = best_move(legal_moves,serach_moves,food_moves,my_snake)
     print(f"MOVE {data['turn']}: {move} picked from all valid options in {legal_moves}")
     print()
   
@@ -66,11 +72,13 @@ def print_grid(grid:List[List[int]])->None:
     print(grid[l-i-1])
 
     
-def fill_snakes(grid:List[List[int]],snakes: dict) -> None:
+def fill_snakes(grid:List[List[int]],heads:List[dict],snakes: dict) -> None:
   for s in snakes:
     body = s["body"] #list of coords
     for pos in body:
       #print(pos)
+      if pos == body[0]: #head of snake
+        heads.append(pos)
       grid[ pos["y"] ][ pos["x"] ] = 1
 
 #return moves in order of which has most space up to size of snake
@@ -134,7 +142,13 @@ def dfs(p:tuple,grid:List[List[int]],looked:List[List[int]]) ->int:
   
   return sum
 
+#returns list of legal moves that don't have bad head to head collisions
+def head_to_head(moves:List[dict],heads: List[dict]) -> List[str]:
+#find possible head to head collisions and only remove if the snake is >= 
+  return ["up"]
 
+
+  
 #returns moves that move closest to food
 def moves_to_food(food:List[dict],moves:List[dict],head:tuple)->List[str]:
   if(len(food) == 0):
@@ -164,12 +178,12 @@ def moves_to_food(food:List[dict],moves:List[dict],head:tuple)->List[str]:
   return (ideal_moves)
 
 #bfs to find move with most space up to its own size and closer to food if possible
-def best_move(moves:List[str], bfs:dict, food:List[str],s:int)->str:
+def best_move(moves:List[str], bfs:dict, food:List[str],me:dict)->str:
   #go through bfs and add smallest value of bfs val but move present in moves
   best=[]
   for s_m in bfs:
     if s_m in moves:
-      if bfs[s_m] >= s:  
+      if bfs[s_m] >= me["length"]:  
         best.append(s_m)
 
   #no spaces bigger than snake size
@@ -185,11 +199,19 @@ def best_move(moves:List[str], bfs:dict, food:List[str],s:int)->str:
   #now we have a list of all smallest values
   if(len(best) == 0):
     return "up" #if there are no moves just return up
-    
+
   best_move = best[0] #default
+  if(len(best) == 1):
+    return best_move
+    
+  #look into future for each of the best moves and choose 
+  #elif:
+    #for
+
 
   #if for 1+ check if one is in food, return that one
   for m in best:
     if m in food:
       return m
+
   return best_move
