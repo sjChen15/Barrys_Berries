@@ -51,6 +51,7 @@ def choose_move(data: dict) -> str:
     #find potential head to head hits
     other_snakes = board["snakes"]
     other_snakes.remove(my_snake)
+    head_moves=[]
     if(len(other_snakes) !=0):
       head_moves = head_to_head(legal_moves,other_snakes,my_snake)
 
