@@ -30,8 +30,6 @@ def choose_move(data: dict) -> str:
     #print_grid(grid)
   
     possible_moves = ["up", "down", "left", "right"] 
-    
-    print(f"Current head: {my_head}")
   
     legal_moves=[] #hold all valid moves 
     for move in possible_moves:
@@ -53,7 +51,8 @@ def choose_move(data: dict) -> str:
     print(f"dfs_moves: {serach_moves}")
     
     #find potential head to head hits
-    other_snakes = data["snakes"].remove(my_snake)
+    other_snakes = board["snakes"]
+    other_snakes.remove(my_snake)
     if(len(other_snakes) !=0):
       head_moves = head_to_head(legal_moves,other_snakes,my_snake)
 
@@ -104,19 +103,19 @@ def dfs_moves(moves:List[dict], grid: List[List[int]], head:tuple) -> List[dict]
     looked = [[0 for x in range(len(grid))] for y in range(len(grid))]
     dumb_looked= [[0 for x in range(len(grid))] for y in range(len(grid))]
     if m=="up":
-      print(f"counting for {m}")
+      #print(f"counting for {m}")
       count[m] = dfs((x+1,y),grid,looked)
       dumb_count[m] = dumb_dfs((x+1,y),grid,dumb_looked,m)
     if m=="down":
-      print(f"counting for {m}")
+      #print(f"counting for {m}")
       count[m] = dfs((x-1,y),grid,looked)
       dumb_count[m] = dumb_dfs((x-1,y),grid,dumb_looked,m)
     if m=="left":
-      print(f"counting for {m}")
+      #print(f"counting for {m}")
       count[m] = dfs((x,y-1),grid,looked)
       dumb_count[m] = dumb_dfs((x,y-1),grid,dumb_looked,m)
     if m=="right":
-      print(f"counting for {m}")
+      #print(f"counting for {m}")
       count[m] = dfs((x,y+1),grid,looked)
       dumb_count[m] = dumb_dfs((x,y+1),grid,dumb_looked,m)
 
@@ -167,28 +166,28 @@ def dumb_dfs(p:tuple,grid:List[List[int]],looked:List[List[int]],m:str) ->int:
   looked[p[0]][p[1]] = 1
   
   #see if up down left and right have been looked for/in range
-  look_up = 1 if(p[1]+1 < l and looked[p[0]][p[1]+1] == 0) else 0
-  look_down = 1 if(p[1]-1 >= 0 and looked[p[0]][p[1]-1] == 0) else 0
-  look_right = 1 if (p[0]+1 < l and looked[p[0]+1][p[1]] == 0) else 0
-  look_left = 1 if(p[0]-1 >=0 and looked[p[0]-1][p[1]] == 0) else 0
+  look_up = 1 if(p[0]+1 < l and looked[p[0]+1][p[1]] == 0) else 0
+  look_down = 1 if(p[0]-1 >= 0 and looked[p[0]-1][p[1]] == 0) else 0
+  look_right = 1 if (p[1]+1 < l and looked[p[0]][p[1]+1] == 0) else 0
+  look_left = 1 if(p[1]-1 >=0 and looked[p[0]][p[1]-1] == 0) else 0
   
   sum = 1
   if m=="up":
-    sum += dfs((p[0],p[1]+1),grid,looked,m) if look_up else 0
-    sum += dfs((p[0]+1,p[1]),grid,looked,m) if look_right else 0
-    sum += dfs((p[0]-1,p[1]),grid,looked,m) if look_left else 0  
+    sum += dumb_dfs((p[0]+1,p[1]),grid,looked,m) if look_up else 0
+    sum += dumb_dfs((p[0],p[1]+1),grid,looked,m) if look_right else 0
+    sum += dumb_dfs((p[0],p[1]-1),grid,looked,m) if look_left else 0  
   elif m=="down":
-    sum += dfs((p[0],p[1]-1),grid,looked,m) if look_down else 0
-    sum += dfs((p[0]+1,p[1]),grid,looked,m) if look_right else 0
-    sum += dfs((p[0]-1,p[1]),grid,looked,m) if look_left else 0  
+    sum += dumb_dfs((p[0]-1,p[1]),grid,looked,m) if look_down else 0
+    sum += dumb_dfs((p[0],p[1]+1),grid,looked,m) if look_right else 0
+    sum += dumb_dfs((p[0],p[1]-1),grid,looked,m) if look_left else 0  
   elif m=="left":
-    sum += dfs((p[0],p[1]+1),grid,looked,m) if look_up else 0
-    sum += dfs((p[0],p[1]-1),grid,looked,m) if look_down else 0
-    sum += dfs((p[0]-1,p[1]),grid,looked,m) if look_left else 0  
+    sum += dumb_dfs((p[0]+1,p[1]),grid,looked,m) if look_up else 0
+    sum += dumb_dfs((p[0]-1,p[1]),grid,looked,m) if look_down else 0
+    sum += dumb_dfs((p[0],p[1]-1),grid,looked,m) if look_left else 0  
   elif m=="right":
-    sum += dfs((p[0],p[1]+1),grid,looked,m) if look_up else 0
-    sum += dfs((p[0],p[1]-1),grid,looked,m) if look_down else 0
-    sum += dfs((p[0]+1,p[1]),grid,looked,m) if look_right else 0
+    sum += dumb_dfs((p[0]+1,p[1]),grid,looked,m) if look_up else 0
+    sum += dumb_dfs((p[0]-1,p[1]),grid,looked,m) if look_down else 0
+    sum += dumb_dfs((p[0],p[1]+1),grid,looked,m) if look_right else 0
   
   return sum
 
@@ -275,7 +274,8 @@ def best_move(moves:List[str], dfs:dict, dumb_dfs:dict,head_hits:List[str],food:
     if s_m in moves:
       if len(best) == 0:
         best.append(s_m)
-      elif best[0]==dfs[s_m]:  
+        continue
+      if dfs[best[0]] == dfs[s_m]:  
         best.append(s_m)
           
   print(f"Best moves: {best}")
@@ -301,15 +301,13 @@ def best_move(moves:List[str], dfs:dict, dumb_dfs:dict,head_hits:List[str],food:
   if(len(best) == 1):
     return best_move
   
-  #use worse bfs to determine which direction out of 2 is worse
+  #use worse dfs to determine which direction out of 2 is worse
   if(len(best) == 2):
-    if(dumb_dfs[best[0]] > dumb_dfs[best[1]] ):
+    if(dumb_dfs[best[0]] > dumb_dfs[best[1]]) and (dumb_dfs[best[1]] <me["length"]*2):
       return best[0]
-    else:
+    elif(dumb_dfs[best[0]] <= dumb_dfs[best[1]]) and (dumb_dfs[best[0]] <me["length"]*2):
       return best[1]
-
-    
-
+  
   #if for 1+ check if one is in food, return that one
   for m in best:
     if m in food:
