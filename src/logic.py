@@ -24,7 +24,7 @@ def choose_move(data: dict) -> str:
     food = board['food']
 
     grid = [[0 for x in range(board_width)] for y in range(board_height)]
-    fill_snakes(grid, board["snakes"])
+    fill_snakes(grid, board)
     #print_grid(grid)
   
     possible_moves = ["up", "down", "left", "right"] 
@@ -71,12 +71,14 @@ def print_grid(grid:List[List[int]])->None:
     print(grid[l-i-1])
 
     
-def fill_snakes(grid:List[List[int]],snakes: dict) -> None:
-  for s in snakes:
+def fill_snakes(grid:List[List[int]],board: dict) -> None:
+  for s in board["snakes"]:
     body = s["body"] #list of coords
     for pos in body:
       #print(pos)
-      grid[ pos["y"] ][ pos["x"] ] = 1
+      #allow for tail chasing
+      if(pos != body[len(body)-1] and body[0] not in board["food"]):
+        grid[ pos["y"] ][ pos["x"] ] = 1
 
 #return moves in order of which has most space up to size of snake
 def dfs_moves(moves:List[dict], grid: List[List[int]], head:tuple) -> List[dict]:
