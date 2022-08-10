@@ -10,7 +10,7 @@ def get_info() -> dict:
         "tail": "freckled",  # TODO: Personalize
     }
 
-
+old_food=[]
 def choose_move(data: dict) -> str:
     my_snake = data["you"]     
     head_x = my_snake["head"]["y"]
@@ -24,7 +24,8 @@ def choose_move(data: dict) -> str:
     food = board['food']
 
     grid = [[0 for x in range(board_width)] for y in range(board_height)]
-    fill_snakes(grid, board)
+    print(f"Old food: {old_food}")
+    fill_snakes(grid, board,old_food)
     #print_grid(grid)
   
     possible_moves = ["up", "down", "left", "right"] 
@@ -61,7 +62,7 @@ def choose_move(data: dict) -> str:
     move = best_move(legal_moves,serach_moves[0],serach_moves[1],head_moves,food_moves,my_snake)
     print(f"MOVE {data['turn']}: {move} picked from all valid options in {legal_moves}")
     print()
-  
+    old_food = food
     return move
 
 
@@ -71,13 +72,14 @@ def print_grid(grid:List[List[int]])->None:
     print(grid[l-i-1])
 
     
-def fill_snakes(grid:List[List[int]],board: dict) -> None:
+def fill_snakes(grid:List[List[int]],board: dict,food:List[dict]) -> None:
   for s in board["snakes"]:
     body = s["body"] #list of coords
     for pos in body:
       #print(pos)
+
       #allow for tail chasing
-      if(pos != body[len(body)-1] and body[0] not in board["food"]):
+      if(pos != body[len(body)-1] and body[0] not in food):
         grid[ pos["y"] ][ pos["x"] ] = 1
 
 #return moves in order of which has most space up to size of snake
