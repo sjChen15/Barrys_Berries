@@ -263,7 +263,7 @@ def head_to_head(moves:List[dict],snakes: List[dict],my_snake:dict) -> List[str]
   return hits
 
 #returns moves that move closest to food
-def moves_to_food(food:List[dict],moves:List[dict],head:tuple)->List[str]:
+def moves_to_food(food:List[dict],head:tuple)->List[str]:
   if(len(food) == 0):
     return []
   #there is probably a better way to do this
