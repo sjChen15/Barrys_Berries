@@ -1,13 +1,14 @@
 from curses.panel import top_panel
 from typing import List
+import json,random,numpy
 
 def get_info() -> dict:
     return {
         "apiversion": "1",
-        "author": "sjc",  # TODO: Your Battlesnake Username
-        "color": "#A671B6",  # TODO: Personalize
-        "head": "tongue",  # TODO: Personalize
-        "tail": "freckled",  # TODO: Personalize
+        "author": "sjc",
+        "color": "#A671B6",
+        "head": "tongue",
+        "tail": "freckled",  
     }
 
 
@@ -24,9 +25,13 @@ def choose_move(data: dict) -> str:
     food = board['food']
 
     grid = [[0 for x in range(board_width)] for y in range(board_height)]
-    fill_snakes(grid, board,)
+    
+    #read and write old food
+    old_food = wr_old_food(food)
+
+    longest=fill_snakes(grid, board,old_food)
     #print_grid(grid)
-  
+
     possible_moves = ["up", "down", "left", "right"] 
   
     legal_moves=[] #hold all valid moves 
@@ -58,7 +63,8 @@ def choose_move(data: dict) -> str:
     #closest food
     food_moves = moves_to_food(food,legal_moves,my_head)
     print(f"All food: {food}")
-    move = best_move(legal_moves,serach_moves[0],serach_moves[1],head_moves,food_moves,my_snake)
+
+    move = best_move(legal_moves,serach_moves[0],serach_moves[1],head_moves,food_moves,my_snake,longest)
     print(f"MOVE {data['turn']}: {move} picked from all valid options in {legal_moves}")
     print()
   
@@ -70,16 +76,34 @@ def print_grid(grid:List[List[int]])->None:
   for i in range(l):
     print(grid[l-i-1])
 
-    
-def fill_snakes(grid:List[List[int]],board: dict) -> None:
+#returns last turn's food
+def wr_old_food(food:List[dict])->List[dict]:
+  f = open("old_food.json", "w")
+
+  #read
+  old_food = json.load(f)["food"]
+  to_dict = {"food":food}
+  
+  #write
+  json.dump(to_dict, f)
+  f.close()
+
+  return old_food
+
+#fills board and returns longest snake size
+def fill_snakes(grid:List[List[int]],board: dict,old_food:List[dict]) -> int:
+  sizes = []
   for s in board["snakes"]:
     body = s["body"] #list of coords
+    sizes.append(s["length"])
     for pos in body:
       #print(pos)
 
       #allow for tail chasing
-      if(pos != body[len(body)-1] and body[0] not in board["food"]):
+      if(pos != body[len(body)-1] and body[0] not in old_food):
         grid[ pos["y"] ][ pos["x"] ] = 1
+  
+  return max(sizes)
 
 #return moves in order of which has most space up to size of snake
 def dfs_moves(moves:List[dict], grid: List[List[int]], head:tuple) -> List[dict]:
@@ -237,7 +261,7 @@ def head_to_head(moves:List[dict],snakes: List[dict],my_snake:dict) -> List[str]
   print(f"Potential head to heads: {hits}")
 
   return hits
-  
+
 #returns moves that move closest to food
 def moves_to_food(food:List[dict],moves:List[dict],head:tuple)->List[str]:
   if(len(food) == 0):
@@ -267,7 +291,7 @@ def moves_to_food(food:List[dict],moves:List[dict],head:tuple)->List[str]:
   return (ideal_moves)
 
 #bfs to find move with most space up to its own size and closer to food if possible
-def best_move(moves:List[str], dfs:dict, dumb_dfs:dict,head_hits:List[str],food:List[str],me:dict)->str:
+def best_move(moves:List[str], dfs:dict, dumb_dfs:dict,head_hits:List[str],food:List[str],me:dict,longest:int)->str:
   #go through bfs and add smallest value of bfs val but move present in moves
   best=[]
 
@@ -285,7 +309,7 @@ def best_move(moves:List[str], dfs:dict, dumb_dfs:dict,head_hits:List[str],food:
   if(len(best) == 0):
     return "up" #if there are no moves just return up
 
-  best_move = best[0] #default
+  best_move = random.choice(best)[0] #default
   if(len(best) == 1):
     return best_move
 
@@ -311,8 +335,10 @@ def best_move(moves:List[str], dfs:dict, dumb_dfs:dict,head_hits:List[str],food:
       return best[1]
   
   #if for 1+ check if one is in food, return that one
-  for m in best:
-    if m in food:
-      return m
+  #only if low or smaller than other snakes
+  if(me["health"]<50 or me["length"]<longest):
+    for m in best:
+      if m in food:
+        return m
 
   return best_move
