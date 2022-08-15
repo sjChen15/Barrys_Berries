@@ -63,6 +63,7 @@ def choose_move(data: dict) -> str:
     #closest food
     food_moves = moves_to_food(food,my_head)
     print(f"All food: {food}")
+    print(f"Old food: {old_food}")
 
     move = best_move(legal_moves,serach_moves[0],serach_moves[1],head_moves,food_moves,my_snake,longest)
     print(f"MOVE {data['turn']}: {move} picked from all valid options in {legal_moves}")
