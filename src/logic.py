@@ -1,6 +1,8 @@
 from curses.panel import top_panel
 from typing import List
-import json,random,numpy
+import json,random
+
+old_food=[] #global variable for old food?
 
 def get_info() -> dict:
     return {
@@ -25,11 +27,9 @@ def choose_move(data: dict) -> str:
     food = board['food']
 
     grid = [[0 for x in range(board_width)] for y in range(board_height)]
-    
-    #read and write old food
-    old_food = wr_old_food(food)
 
-    longest=fill_snakes(grid, board,old_food)
+
+    longest=fill_snakes(grid, board)
     #print_grid(grid)
 
     possible_moves = ["up", "down", "left", "right"] 
@@ -67,7 +67,9 @@ def choose_move(data: dict) -> str:
     move = best_move(legal_moves,serach_moves[0],serach_moves[1],head_moves,food_moves,my_snake,longest)
     print(f"MOVE {data['turn']}: {move} picked from all valid options in {legal_moves}")
     print()
-  
+
+    #update old_food
+    old_food = food
     return move
 
 
@@ -76,24 +78,8 @@ def print_grid(grid:List[List[int]])->None:
   for i in range(l):
     print(grid[l-i-1])
 
-#returns last turn's food
-def wr_old_food(food:List[dict])->List[dict]:
-  f = open("old_food.json", "w")
-
-  #read
-  food_json = json.load(f)
-  old_food = food_json["food"]
-  
-  print(old_food)
-  #write
-  to_dict = {"food":food}
-  json.dump(to_dict, f)
-  f.close()
-
-  return old_food
-
 #fills board and returns longest snake size
-def fill_snakes(grid:List[List[int]],board: dict,old_food:List[dict]) -> int:
+def fill_snakes(grid:List[List[int]],board: dict) -> int:
   sizes = []
   for s in board["snakes"]:
     body = s["body"] #list of coords
