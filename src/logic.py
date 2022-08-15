@@ -61,7 +61,7 @@ def choose_move(data: dict) -> str:
       head_moves = head_to_head(legal_moves,other_snakes,my_snake)
 
     #closest food
-    food_moves = moves_to_food(food,legal_moves,my_head)
+    food_moves = moves_to_food(food,my_head)
     print(f"All food: {food}")
 
     move = best_move(legal_moves,serach_moves[0],serach_moves[1],head_moves,food_moves,my_snake,longest)
