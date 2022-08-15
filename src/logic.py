@@ -297,7 +297,7 @@ def best_move(moves:List[str], dfs:dict, dumb_dfs:dict,head_hits:List[str],food:
   if(len(best) == 0):
     return "up" #if there are no moves just return up
 
-  best_move = random.choice(best)[0] #default
+  best_move = random.choice(best) #default
   if(len(best) == 1):
     return best_move
 
