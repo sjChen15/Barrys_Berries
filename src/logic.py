@@ -2,8 +2,8 @@ from curses.panel import top_panel
 from typing import List
 import json,random
 
-old_food=[] #global variable for old food?
-
+global old_food #global variable for old food?
+old_food=[]
 def get_info() -> dict:
     return {
         "apiversion": "1",
