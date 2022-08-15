@@ -81,10 +81,12 @@ def wr_old_food(food:List[dict])->List[dict]:
   f = open("old_food.json", "w")
 
   #read
-  old_food = json.load(f)["food"]
-  to_dict = {"food":food}
+  food_json = json.load(f)
+  old_food = food_json["food"]
   
+  print(old_food)
   #write
+  to_dict = {"food":food}
   json.dump(to_dict, f)
   f.close()
 
